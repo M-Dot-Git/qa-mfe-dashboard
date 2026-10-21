@@ -12,7 +12,11 @@ export default defineConfig({
       shared: ["react", "react-dom"]
     })
   ],
-  server: { port: 3001, strictPort: true },
+  server: {
+    port: 3001,
+    strictPort: true,
+    proxy: { "/api": "http://localhost:8000" }
+  },
   preview: { port: 3001, strictPort: true },
   build: { target: "esnext", modulePreload: false, cssCodeSplit: false }
 });
