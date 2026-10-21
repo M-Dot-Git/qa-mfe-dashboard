@@ -1,0 +1,11 @@
+import "./styles.css";
+
+export default function DashboardApp() {
+  return <div className="mfe">
+    <div className="page-heading"><div><span className="eyebrow">QUALITY OVERVIEW</span><h1>QA Insights</h1><p>Release confidence and test execution health in one place.</p></div><span className="api-pill"><i /> API not connected</span></div>
+    <section className="welcome-panel"><div className="welcome-icon">↗</div><div><strong>Connect your QA data source</strong><p>Dashboard metrics, trends and execution history will appear here when the mock API is available.</p></div></section>
+    <div className="kpi-grid">{["Test cases", "Executions", "Pass rate", "Open defects"].map((label) => <article className="kpi-card" key={label}><span>{label}</span><strong>—</strong><small>Waiting for API data</small></article>)}</div>
+    <div className="dashboard-grid"><section className="panel trend-panel"><div className="panel-heading"><div><h2>Execution trend</h2><p>Pass and fail results over time</p></div><button className="quiet-button">Last 14 runs⌄</button></div><div className="chart-empty"><div className="chart-bars" aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div><div><strong>No execution history yet</strong><p>Trend data will be displayed after the API is connected.</p></div></div></section><section className="panel readiness"><div className="panel-heading"><div><h2>Release readiness</h2><p>Build confidence at a glance</p></div></div><div className="readiness-mark">—</div><strong>Awaiting data</strong><p>No release assessment is available until a verified API contract is connected.</p></section></div>
+    <section className="panel executions"><div className="panel-heading"><div><h2>Recent test executions</h2><p>Execution summaries from your connected QA service</p></div><button className="quiet-button" disabled>View all →</button></div><div className="table-scroll"><table><thead><tr>{["Execution", "Build", "Branch", "Environment", "Status", "Started"].map((col) => <th key={col}>{col}</th>)}</tr></thead><tbody><tr><td colSpan={6} className="table-empty">No execution data available. Connect the mock API to populate this table.</td></tr></tbody></table></div></section>
+  </div>;
+}
