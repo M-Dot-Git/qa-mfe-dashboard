@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchQaApi } from "./api/client";
 import "./styles.css";
 
 interface DashboardData {
@@ -109,8 +110,7 @@ export default function DashboardApp() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    void fetch("/api/qa/dashboard", {
-      credentials: "same-origin",
+    void fetchQaApi("/api/qa/dashboard", {
       signal: controller.signal
     }).then(async (response) => {
       if (!response.ok) throw await readError(response);
