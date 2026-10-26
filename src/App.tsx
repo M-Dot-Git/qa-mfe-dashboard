@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-import { fetchQaApi } from "./api/client";
+import { fetchQaApi, type AccessTokenProvider } from "./api/client";
 import "./styles.css";
+
+interface DashboardProps {
+  getAccessToken?: AccessTokenProvider;
+}
 
 interface DashboardData {
   generatedAt: string;
@@ -100,7 +104,7 @@ function statusTone(status: string): "success" | "danger" | "warning" | "neutral
   }
 }
 
-export default function DashboardApp() {
+export default function DashboardApp({ getAccessToken }: DashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,7 +114,12 @@ export default function DashboardApp() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    void fetchQaApi("/api/qa/dashboard", {
+    if (!getAccessToken) {
+      setError("Load the dashboard through the QA Pulse shell to access the authenticated QA API.");
+      setLoading(false);
+      return () => controller.abort();
+    }
+    void fetchQaApi("/api/qa/dashboard", getAccessToken, {
       signal: controller.signal
     }).then(async (response) => {
       if (!response.ok) throw await readError(response);
@@ -124,7 +133,7 @@ export default function DashboardApp() {
       setLoading(false);
     });
     return () => controller.abort();
-  }, [reloadKey]);
+  }, [getAccessToken, reloadKey]);
 
   const retry = () => setReloadKey((value) => value + 1);
 

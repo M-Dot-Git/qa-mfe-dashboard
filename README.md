@@ -2,9 +2,9 @@
 
 Independent React dashboard remote on port 3001. It exposes `./App` in
 `/assets/remoteEntry.js` through the documented Vite ESM federation contract.
-The initial screen intentionally shows API-unavailable/empty states rather than
-inventing QA measurements.
+The shell supplies a typed `getAccessToken` prop; the remote uses it to request
+authorized dashboard data from the QA Insights API. When run by itself without
+that provider, the dashboard explains that it must be opened through the shell.
 
-Set `VITE_API_BASE_URL` when an API is available. No endpoint or response
-contract was verified; connect data only after confirming the API's OpenAPI
-specification. Run `npm install`, `npm test`, and `npm run build` here.
+The local API endpoint is `/api/qa/dashboard`; the shell proxies API requests
+to port 8000. Run `npm install`, `npm test`, and `npm run build` here.
