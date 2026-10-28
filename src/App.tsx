@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchQaApi, type AccessTokenProvider } from "./api/client";
+import { TrendChart } from "./components/TrendChart";
 import "./styles.css";
 
 interface DashboardProps {
@@ -155,15 +156,7 @@ export default function DashboardApp({ getAccessToken }: DashboardProps) {
         ].map(({ label, value, detail, tone }) => <article className={`kpi-card kpi-card-${tone}`} key={label}><span>{label}</span><strong>{value}</strong><small>{detail}</small></article>)}
       </div>
       <div className="dashboard-grid">
-        <section className="panel trend-panel"><div className="panel-heading"><div><h2>Execution trend</h2><p>Pass and fail results over time</p></div><span className="quiet-button">Last 7 days</span></div>
-          <div className="trend-bars" role="img" aria-label="Seven day pass and fail execution trend">
-            {data.trend.map((point) => <div className="trend-column" key={point.date} title={`${point.date}: ${point.passed} passed, ${point.failed} failed`}>
-              <span className="trend-bar-passed" style={{ height: `${Math.max(8, point.passed / Math.max(...data.trend.map((entry) => entry.passed)) * 100)}%` }} />
-              <span className="trend-bar-failed" style={{ height: `${Math.max(4, point.failed / Math.max(...data.trend.map((entry) => entry.failed)) * 45)}%` }} />
-              <small>{new Date(`${point.date}T00:00:00`).toLocaleDateString(undefined, { weekday: "short" })}</small>
-            </div>)}
-          </div>
-        </section>
+        <TrendChart data={data.trend} />
         <section className={`panel readiness ${statusTone(data.releaseReadiness.status)}`}><div className="panel-heading"><div><h2>Release readiness</h2><p>Build confidence at a glance</p></div></div><div className="readiness-mark">{data.releaseReadiness.score}</div><strong>{data.releaseReadiness.status}</strong><p>Sample readiness score from randomized QA metrics.</p></section>
       </div>
       <section className="panel executions"><div className="panel-heading"><div><h2>Recent test executions</h2><p>Sampled execution summaries from the mock QA API</p></div></div>
