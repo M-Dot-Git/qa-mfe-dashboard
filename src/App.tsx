@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { TrendChart } from "./components/TrendChart";
 import { fetchDashboardData } from "./api/dashboard";
 import type { DashboardData } from "./types/dashboard";
@@ -27,7 +27,7 @@ function statusTone(status: string): "success" | "danger" | "warning" | "neutral
   }
 }
 
-export default function Dashboard({ getAccessToken }: DashboardProps) {
+function DashboardOverview({ getAccessToken }: DashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -204,6 +204,126 @@ export default function Dashboard({ getAccessToken }: DashboardProps) {
           </section>
         </>
       )}
+    </div>
+  );
+}
+
+type DashboardSection = "launcher" | "dashboard" | "test-reports";
+
+export default function Dashboard({ getAccessToken }: DashboardProps) {
+  const [section, setSection] = useState<DashboardSection>("launcher");
+  const [ReportsApp, setReportsApp] = useState<ComponentType<DashboardProps> | null>(null);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsError, setReportsError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+
+  useEffect(() => {
+    if (section !== "test-reports") return;
+
+    let active = true;
+    setReportsApp(null);
+    setReportsLoading(true);
+    setReportsError(null);
+
+    import("qa_test_reports/App")
+      .then((module) => {
+        if (!active) return;
+        setReportsApp(() => module.default);
+        setReportsLoading(false);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setReportsError(
+          error instanceof Error ? error.message : "Could not load Test Reports."
+        );
+        setReportsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [retryKey, section]);
+
+  if (section === "dashboard") {
+    return (
+      <div className="mfe">
+        <button className="back-to-apps" onClick={() => setSection("launcher")}>
+          Back to workspace
+        </button>
+        <DashboardOverview getAccessToken={getAccessToken} />
+      </div>
+    );
+  }
+
+  if (section === "test-reports") {
+    return (
+      <div className="mfe">
+        <button className="back-to-apps" onClick={() => setSection("launcher")}>
+          Back to workspace
+        </button>
+        {reportsLoading && (
+          <section className="welcome-panel" aria-live="polite">
+            <span className="spinner" />
+            <div>
+              <strong>Loading Test Reports</strong>
+              <p>Connecting to the reports micro-frontend…</p>
+            </div>
+          </section>
+        )}
+        {reportsError && (
+          <section className="data-error" role="alert">
+            <div>
+              <strong>Could not load Test Reports</strong>
+              <p>{reportsError}</p>
+            </div>
+            <button
+              className="quiet-button"
+              onClick={() => setRetryKey((value) => value + 1)}
+            >
+              Retry
+            </button>
+          </section>
+        )}
+        {ReportsApp && <ReportsApp getAccessToken={getAccessToken} />}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mfe">
+      <header className="launcher-heading">
+        <span className="eyebrow">QUALITY WORKSPACE</span>
+        <h1>Choose a workspace</h1>
+        <p>Open your dashboard or explore test reports.</p>
+      </header>
+      <section className="launcher-grid" aria-label="Available workspaces">
+        <button
+          className="launcher-card"
+          onClick={() => setSection("dashboard")}
+          type="button"
+        >
+          <span className="launcher-card-index">01</span>
+          <span className="launcher-card-kicker">QUALITY OVERVIEW</span>
+          <strong>Dashboard</strong>
+          <span className="launcher-card-description">
+            Review release readiness, execution trends, and recent test activity.
+          </span>
+          <span className="launcher-card-action">Open dashboard</span>
+        </button>
+        <button
+          className="launcher-card"
+          onClick={() => setSection("test-reports")}
+          type="button"
+        >
+          <span className="launcher-card-index">02</span>
+          <span className="launcher-card-kicker">QUALITY REPORTING</span>
+          <strong>Test Reports</strong>
+          <span className="launcher-card-description">
+            View reports provided by the test reports service through the QA API.
+          </span>
+          <span className="launcher-card-action">Open Test Reports</span>
+        </button>
+      </section>
     </div>
   );
 }
