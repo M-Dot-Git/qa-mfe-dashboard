@@ -306,6 +306,18 @@ function WorkspaceLauncher() {
           </span>
           <span className="launcher-card-action">Open Test Reports</span>
         </Link>
+        <Link
+          className="launcher-card"
+          to="/dashboard/test-reports/third-party-views"
+        >
+          <span className="launcher-card-index">03</span>
+          <span className="launcher-card-kicker">CONNECTED REPORTING</span>
+          <strong>3rd Party Views</strong>
+          <span className="launcher-card-description">
+            Open connected dashboards and reports in a tabbed view.
+          </span>
+          <span className="launcher-card-action">Open 3rd party views</span>
+        </Link>
       </section>
     </div>
   );
