@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { TrendChart } from "./components/TrendChart";
 import { fetchDashboardData } from "./api/dashboard";
 import type { DashboardData } from "./types/dashboard";
@@ -27,7 +28,7 @@ function statusTone(status: string): "success" | "danger" | "warning" | "neutral
   }
 }
 
-export default function Dashboard({ getAccessToken }: DashboardProps) {
+function DashboardOverview({ getAccessToken }: DashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -205,5 +206,143 @@ export default function Dashboard({ getAccessToken }: DashboardProps) {
         </>
       )}
     </div>
+  );
+}
+
+function TestReportsRemote({ getAccessToken }: DashboardProps) {
+  const [ReportsApp, setReportsApp] = useState<ComponentType<DashboardProps> | null>(null);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsError, setReportsError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setReportsApp(null);
+    setReportsLoading(true);
+    setReportsError(null);
+
+    import("qa_test_reports/App")
+      .then((module) => {
+        if (!active) return;
+        setReportsApp(() => module.default);
+        setReportsLoading(false);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setReportsError(
+          error instanceof Error ? error.message : "Could not load Test Reports."
+        );
+        setReportsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [retryKey]);
+
+  return (
+    <div className="mfe">
+      <Link className="back-to-apps" to="/dashboard">
+        Back to workspace
+      </Link>
+      {reportsLoading && (
+        <section className="welcome-panel" aria-live="polite">
+          <span className="spinner" />
+          <div>
+            <strong>Loading Test Reports</strong>
+            <p>Connecting to the reports micro-frontend…</p>
+          </div>
+        </section>
+      )}
+      {reportsError && (
+        <section className="data-error" role="alert">
+          <div>
+            <strong>Could not load Test Reports</strong>
+            <p>{reportsError}</p>
+          </div>
+          <button
+            className="quiet-button"
+            onClick={() => setRetryKey((value) => value + 1)}
+          >
+            Retry
+          </button>
+        </section>
+      )}
+      {ReportsApp && <ReportsApp getAccessToken={getAccessToken} />}
+    </div>
+  );
+}
+
+function WorkspaceLauncher() {
+  return (
+    <div className="mfe">
+      <header className="launcher-heading">
+        <span className="eyebrow">QUALITY WORKSPACE</span>
+        <h1>Choose a workspace</h1>
+        <p>Open your dashboard or explore test reports.</p>
+      </header>
+      <section className="launcher-grid" aria-label="Available workspaces">
+        <Link
+          className="launcher-card"
+          to="/dashboard/overview"
+        >
+          <span className="launcher-card-index">01</span>
+          <span className="launcher-card-kicker">QUALITY OVERVIEW</span>
+          <strong>Dashboard</strong>
+          <span className="launcher-card-description">
+            Review release readiness, execution trends, and recent test activity.
+          </span>
+          <span className="launcher-card-action">Open dashboard</span>
+        </Link>
+        <Link
+          className="launcher-card"
+          to="/dashboard/test-reports"
+        >
+          <span className="launcher-card-index">02</span>
+          <span className="launcher-card-kicker">QUALITY REPORTING</span>
+          <strong>Test Reports</strong>
+          <span className="launcher-card-description">
+            View reports provided by the test reports service through the QA API.
+          </span>
+          <span className="launcher-card-action">Open Test Reports</span>
+        </Link>
+        <Link
+          className="launcher-card"
+          to="/dashboard/test-reports/third-party-views"
+        >
+          <span className="launcher-card-index">03</span>
+          <span className="launcher-card-kicker">CONNECTED REPORTING</span>
+          <strong>3rd Party Views</strong>
+          <span className="launcher-card-description">
+            Open connected dashboards and reports in a tabbed view.
+          </span>
+          <span className="launcher-card-action">Open 3rd party views</span>
+        </Link>
+      </section>
+    </div>
+  );
+}
+
+export default function Dashboard({ getAccessToken }: DashboardProps) {
+  return (
+    <Routes>
+      <Route index element={<WorkspaceLauncher />} />
+      <Route
+        path="overview"
+        element={
+          <div className="mfe">
+            <Link className="back-to-apps" to="/dashboard">
+              Back to workspace
+            </Link>
+            <DashboardOverview getAccessToken={getAccessToken} />
+          </div>
+        }
+      />
+      <Route
+        path="test-reports/*"
+        element={<TestReportsRemote getAccessToken={getAccessToken} />}
+      />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
