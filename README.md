@@ -14,6 +14,8 @@ navigation:
 | `/dashboard` | Workspace cards |
 | `/dashboard/overview` | Existing QA metrics |
 | `/dashboard/test-reports/*` | Test Reports MFE |
+| `/dashboard/github` | Cursor-paginated pull requests |
+| `/dashboard/github/prs/:number?repo=owner/repo` | Pull request detail |
 
 Test Reports is loaded as a nested federation remote only when selected; it is
 not registered in `qa-mfe-shell`. It receives the same access-token provider

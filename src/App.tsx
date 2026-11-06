@@ -2,6 +2,7 @@ import { useEffect, useState, type ComponentType } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { TrendChart } from "./components/TrendChart";
 import { fetchDashboardData } from "./api/dashboard";
+import { GitHubPullRequests } from "./components/GitHubPullRequests";
 import type { DashboardData } from "./types/dashboard";
 import "./styles.css";
 
@@ -318,6 +319,15 @@ function WorkspaceLauncher() {
           </span>
           <span className="launcher-card-action">Open 3rd party views</span>
         </Link>
+        <Link className="launcher-card" to="/dashboard/github">
+          <span className="launcher-card-index">04</span>
+          <span className="launcher-card-kicker">ENGINEERING ACTIVITY</span>
+          <strong>Pull requests</strong>
+          <span className="launcher-card-description">
+            Browse repository pull requests, checks, reviews, and changed files.
+          </span>
+          <span className="launcher-card-action">Open pull requests</span>
+        </Link>
       </section>
     </div>
   );
@@ -341,6 +351,14 @@ export default function Dashboard({ getAccessToken }: DashboardProps) {
       <Route
         path="test-reports/*"
         element={<TestReportsRemote getAccessToken={getAccessToken} />}
+      />
+      <Route
+        path="github"
+        element={<GitHubPullRequests getAccessToken={getAccessToken} />}
+      />
+      <Route
+        path="github/prs/:number"
+        element={<GitHubPullRequests getAccessToken={getAccessToken} />}
       />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
