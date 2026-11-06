@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
             externalType: "promise"
           }
         },
-        shared: ["react", "react-dom"]
+        shared: ["react", "react-dom", "react-router-dom"]
       })
     ],
     server: {

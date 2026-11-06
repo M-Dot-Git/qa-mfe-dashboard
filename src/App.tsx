@@ -1,4 +1,5 @@
 import { useEffect, useState, type ComponentType } from "react";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { TrendChart } from "./components/TrendChart";
 import { fetchDashboardData } from "./api/dashboard";
 import type { DashboardData } from "./types/dashboard";
@@ -208,18 +209,13 @@ function DashboardOverview({ getAccessToken }: DashboardProps) {
   );
 }
 
-type DashboardSection = "launcher" | "dashboard" | "test-reports";
-
-export default function Dashboard({ getAccessToken }: DashboardProps) {
-  const [section, setSection] = useState<DashboardSection>("launcher");
+function TestReportsRemote({ getAccessToken }: DashboardProps) {
   const [ReportsApp, setReportsApp] = useState<ComponentType<DashboardProps> | null>(null);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [reportsError, setReportsError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    if (section !== "test-reports") return;
-
     let active = true;
     setReportsApp(null);
     setReportsLoading(true);
@@ -242,53 +238,42 @@ export default function Dashboard({ getAccessToken }: DashboardProps) {
     return () => {
       active = false;
     };
-  }, [retryKey, section]);
+  }, [retryKey]);
 
-  if (section === "dashboard") {
-    return (
-      <div className="mfe">
-        <button className="back-to-apps" onClick={() => setSection("launcher")}>
-          Back to workspace
-        </button>
-        <DashboardOverview getAccessToken={getAccessToken} />
-      </div>
-    );
-  }
+  return (
+    <div className="mfe">
+      <Link className="back-to-apps" to="/dashboard">
+        Back to workspace
+      </Link>
+      {reportsLoading && (
+        <section className="welcome-panel" aria-live="polite">
+          <span className="spinner" />
+          <div>
+            <strong>Loading Test Reports</strong>
+            <p>Connecting to the reports micro-frontend…</p>
+          </div>
+        </section>
+      )}
+      {reportsError && (
+        <section className="data-error" role="alert">
+          <div>
+            <strong>Could not load Test Reports</strong>
+            <p>{reportsError}</p>
+          </div>
+          <button
+            className="quiet-button"
+            onClick={() => setRetryKey((value) => value + 1)}
+          >
+            Retry
+          </button>
+        </section>
+      )}
+      {ReportsApp && <ReportsApp getAccessToken={getAccessToken} />}
+    </div>
+  );
+}
 
-  if (section === "test-reports") {
-    return (
-      <div className="mfe">
-        <button className="back-to-apps" onClick={() => setSection("launcher")}>
-          Back to workspace
-        </button>
-        {reportsLoading && (
-          <section className="welcome-panel" aria-live="polite">
-            <span className="spinner" />
-            <div>
-              <strong>Loading Test Reports</strong>
-              <p>Connecting to the reports micro-frontend…</p>
-            </div>
-          </section>
-        )}
-        {reportsError && (
-          <section className="data-error" role="alert">
-            <div>
-              <strong>Could not load Test Reports</strong>
-              <p>{reportsError}</p>
-            </div>
-            <button
-              className="quiet-button"
-              onClick={() => setRetryKey((value) => value + 1)}
-            >
-              Retry
-            </button>
-          </section>
-        )}
-        {ReportsApp && <ReportsApp getAccessToken={getAccessToken} />}
-      </div>
-    );
-  }
-
+function WorkspaceLauncher() {
   return (
     <div className="mfe">
       <header className="launcher-heading">
@@ -297,10 +282,9 @@ export default function Dashboard({ getAccessToken }: DashboardProps) {
         <p>Open your dashboard or explore test reports.</p>
       </header>
       <section className="launcher-grid" aria-label="Available workspaces">
-        <button
+        <Link
           className="launcher-card"
-          onClick={() => setSection("dashboard")}
-          type="button"
+          to="/dashboard/overview"
         >
           <span className="launcher-card-index">01</span>
           <span className="launcher-card-kicker">QUALITY OVERVIEW</span>
@@ -309,11 +293,10 @@ export default function Dashboard({ getAccessToken }: DashboardProps) {
             Review release readiness, execution trends, and recent test activity.
           </span>
           <span className="launcher-card-action">Open dashboard</span>
-        </button>
-        <button
+        </Link>
+        <Link
           className="launcher-card"
-          onClick={() => setSection("test-reports")}
-          type="button"
+          to="/dashboard/test-reports"
         >
           <span className="launcher-card-index">02</span>
           <span className="launcher-card-kicker">QUALITY REPORTING</span>
@@ -322,8 +305,32 @@ export default function Dashboard({ getAccessToken }: DashboardProps) {
             View reports provided by the test reports service through the QA API.
           </span>
           <span className="launcher-card-action">Open Test Reports</span>
-        </button>
+        </Link>
       </section>
     </div>
+  );
+}
+
+export default function Dashboard({ getAccessToken }: DashboardProps) {
+  return (
+    <Routes>
+      <Route index element={<WorkspaceLauncher />} />
+      <Route
+        path="overview"
+        element={
+          <div className="mfe">
+            <Link className="back-to-apps" to="/dashboard">
+              Back to workspace
+            </Link>
+            <DashboardOverview getAccessToken={getAccessToken} />
+          </div>
+        }
+      />
+      <Route
+        path="test-reports/*"
+        element={<TestReportsRemote getAccessToken={getAccessToken} />}
+      />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
